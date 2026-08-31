@@ -657,6 +657,13 @@
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
+  function abbreviateCity(city) {
+    if (!city) return '';
+    const words = city.trim().split(/\s+/).filter(Boolean);
+    if (words.length > 1) return words.map(w => w[0]).join('').slice(0, 4).toUpperCase();
+    return words[0].slice(0, 3).toUpperCase();
+  }
+
   async function fetchVisitorLocation() {
     for (const url of SAT_GEO_URLS) {
       try {
@@ -665,7 +672,8 @@
         const data = await res.json();
         const lat = parseFloat(data.latitude);
         const lon = parseFloat(data.longitude);
-        if (!isNaN(lat) && !isNaN(lon)) return { lat, lon };
+        const city = typeof data.city === 'string' ? data.city : '';
+        if (!isNaN(lat) && !isNaN(lon)) return { lat, lon, city };
       } catch (err) { /* try next source */ }
     }
     return null;
@@ -735,7 +743,8 @@
     wrap.hidden = false;
     wrap.classList.add('pass-active');
     if (flag && flagName) {
-      flagName.textContent = sat.name + ' Overhead';
+      const cityAbbr = abbreviateCity(satObserver && satObserver.city);
+      flagName.textContent = sat.name + ' Overhead' + (cityAbbr ? ' · ' + cityAbbr : '');
       flag.hidden = false;
     }
 
