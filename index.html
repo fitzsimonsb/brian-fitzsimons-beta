@@ -205,6 +205,20 @@
   .hero-inner { max-width: var(--max); margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; }
   .hero-status { display: flex; flex-wrap: wrap; gap: 6px 10px; }
   .hero-cta-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-top: 12px; }
+  .availability-link { color: var(--live-red); text-decoration: none; }
+  .availability-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 0.95em;
+    margin-left: 3px;
+    background: var(--live-red);
+    vertical-align: text-bottom;
+    opacity: 0;
+  }
+  .availability-cursor.typing { opacity: 1; }
+  .availability-cursor.blink { opacity: 1; animation: cursor-blink 1s steps(1) infinite; }
+  @keyframes cursor-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .availability-cursor.blink { animation: none; opacity: 1; } }
 
   /* ---------- work ---------- */
   /* A fixed-aspect framed panel (not a full-bleed cover background) so the crop is
@@ -379,7 +393,7 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
       <!-- Add the real LinkedIn URL here — matches the footer link -->
-      <a href="#" class="body-lg" style="color: var(--on-primary);" target="_blank" rel="noopener">LinkedIn (Available for new projects)</a>
+      <a href="#" class="body-lg availability-link" target="_blank" rel="noopener">Availability <span id="availability-typed"></span><span class="availability-cursor" id="availability-cursor"></span></a>
     </div>
   </div>
 </header>
@@ -673,6 +687,33 @@
     el.textContent = weatherStr + timeStr + ' Local · Working at Datavant';
   }
   loadHeroStatus();
+
+  // ---------- hero: "Availability" typewriter + blinking cursor ----------
+  function typeAvailability() {
+    const target = document.getElementById('availability-typed');
+    const cursor = document.getElementById('availability-cursor');
+    if (!target || !cursor) return;
+    const text = '[Available to Contract]';
+    if (prefersReducedMotion()) {
+      target.textContent = text;
+      cursor.classList.add('blink');
+      return;
+    }
+    cursor.classList.add('typing');
+    let i = 0;
+    function step() {
+      if (i <= text.length) {
+        target.textContent = text.slice(0, i);
+        i++;
+        setTimeout(step, 45 + Math.random() * 55);
+      } else {
+        cursor.classList.remove('typing');
+        cursor.classList.add('blink');
+      }
+    }
+    setTimeout(step, 500);
+  }
+  typeAvailability();
 
   // ---------- hero: real satellite overhead (IP geolocation + live TLE orbital data, client-side only) ----------
   const SAT_TLE_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle';
