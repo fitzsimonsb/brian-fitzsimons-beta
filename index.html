@@ -757,15 +757,14 @@
     const eastward = sat.azimuthDeg < 180;
     const startX = eastward ? '-4%' : '104%';
     const endX = eastward ? '104%' : '-4%';
-    const peakTop = 14 + (90 - Math.min(sat.elevationDeg, 90)) * 0.5; // higher elevation -> nearer top of frame
+    const trackTop = 18 + (90 - Math.min(sat.elevationDeg, 90)) * 0.6; // higher elevation -> higher, straight track
     dot.getAnimations().forEach(a => a.cancel());
     dot.animate([
-      { left: startX, top: '78%', opacity: 0, offset: 0 },
+      { left: startX, top: trackTop + '%', opacity: 0, offset: 0 },
       { opacity: 1, offset: 0.08 },
-      { left: '50%', top: peakTop + '%', offset: 0.5 },
       { opacity: 1, offset: 0.92 },
-      { left: endX, top: '78%', opacity: 0, offset: 1 }
-    ], { duration: 28000, easing: 'ease-in-out', fill: 'forwards' });
+      { left: endX, top: trackTop + '%', opacity: 0, offset: 1 }
+    ], { duration: 28000, easing: 'linear', fill: 'forwards' });
   }
 
   function hideSatellitePass() {
