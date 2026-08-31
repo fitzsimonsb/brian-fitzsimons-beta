@@ -295,6 +295,21 @@
   .lab-demo-stage.open { display: flex; }
   .lab-video { width: 100%; border-radius: 4px; background: #000; display: none; }
   .lab-canvas { display: none; }
+  .emotion-video-wrap { position: relative; width: 100%; border-radius: 4px; overflow: hidden; }
+  .emotion-video-wrap .lab-video { display: none; }
+  .emotion-scan-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    background:
+      linear-gradient(rgba(3, 18, 9, 0.55), rgba(3, 18, 9, 0.55)),
+      repeating-linear-gradient(0deg, rgba(70,255,140,0.55) 0px, rgba(70,255,140,0.55) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(70,255,140,0.55) 0px, rgba(70,255,140,0.55) 1px, transparent 1px, transparent 26px);
+  }
+  .emotion-scan-overlay.active { opacity: 1; }
+  #emotion-video.scanning { filter: brightness(0.55) contrast(1.15) saturate(2.2) sepia(0.5) hue-rotate(75deg); }
+  @media (prefers-reduced-motion: reduce) { .emotion-scan-overlay { transition: none; } }
   .lab-result { font-family: var(--font); font-size: 13px; letter-spacing: 0.4px; color: var(--on-primary-mute); min-height: 18px; }
   .lab-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .lab-btn-row .ghost-pill { padding: 10px 16px; font-size: 11px; }
@@ -481,7 +496,10 @@
             <span class="micro-cap">Awaiting Feed</span>
           </div>
           <div class="lab-demo-stage" id="emotion-stage">
-            <video id="emotion-video" class="lab-video" autoplay muted playsinline></video>
+            <div class="emotion-video-wrap">
+              <video id="emotion-video" class="lab-video" autoplay muted playsinline></video>
+              <div class="emotion-scan-overlay" id="emotion-scan-overlay" aria-hidden="true"></div>
+            </div>
             <div class="lab-result" id="emotion-result"></div>
           </div>
         </div>
@@ -948,6 +966,7 @@
     const video = document.getElementById('emotion-video');
     const result = document.getElementById('emotion-result');
     const launchBtn = document.getElementById('emotion-launch');
+    const overlay = document.getElementById('emotion-scan-overlay');
     stage.classList.add('open');
     document.getElementById('emotion-preview').classList.add('launched');
     launchBtn.disabled = true;
@@ -967,13 +986,37 @@
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       video.srcObject = stream;
       video.style.display = 'block';
+      video.classList.add('scanning');
+      overlay.classList.add('active');
       result.textContent = 'Scanning…';
+      launchBtn.textContent = 'Stop Demo';
+      launchBtn.onclick = stopEmotionDetection;
       emotionDetectLoop();
     } catch (err) {
       result.textContent = 'Camera unavailable — ' + (err && err.message ? err.message : 'permission denied or no models loaded.');
     } finally {
       launchBtn.disabled = false;
     }
+  }
+
+  function stopEmotionDetection() {
+    const stage = document.getElementById('emotion-stage');
+    const video = document.getElementById('emotion-video');
+    const result = document.getElementById('emotion-result');
+    const launchBtn = document.getElementById('emotion-launch');
+    const overlay = document.getElementById('emotion-scan-overlay');
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+    video.style.display = 'none';
+    video.classList.remove('scanning');
+    overlay.classList.remove('active');
+    result.textContent = '';
+    stage.classList.remove('open');
+    document.getElementById('emotion-preview').classList.remove('launched');
+    launchBtn.textContent = 'Launch';
+    launchBtn.onclick = startEmotionDetection;
   }
 
   function emotionDetectLoop() {
