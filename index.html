@@ -181,17 +181,26 @@
     position: absolute; inset: -3%;
     background-image: url('work-bg.jpg');
     background-size: cover;
-    background-position: center 32%;
-    filter: grayscale(1) contrast(1.05) brightness(0.9);
+    background-position: 68% 32%;
+    filter: grayscale(1) contrast(1.05) brightness(0.9) blur(7px);
     opacity: 0.3;
   }
   .work-bg-fade {
     position: absolute; inset: 0;
     background:
-      linear-gradient(180deg, var(--canvas-night) 0%, rgba(0,0,0,0.35) 22%, rgba(0,0,0,0.45) 78%, var(--canvas-night) 100%),
-      linear-gradient(90deg, var(--canvas-night) 0%, rgba(0,0,0,0.15) 38%, rgba(0,0,0,0.15) 100%);
+      linear-gradient(180deg, var(--canvas-night) 0%, rgba(0,0,0,0.4) 38%, rgba(0,0,0,0.45) 78%, var(--canvas-night) 100%),
+      linear-gradient(90deg, var(--canvas-night) 0%, rgba(0,0,0,0.2) 52%, rgba(0,0,0,0.1) 100%);
   }
   #work .band-inner { position: relative; z-index: 1; }
+  @media (max-width: 900px) {
+    /* cover crops much tighter on tall narrow screens — reframe on his face, lighten the darkening so he isn't lost */
+    .work-bg-image { background-position: 100% 22%; opacity: 0.55; filter: grayscale(1) contrast(1.1) brightness(1.05) blur(3px); }
+    .work-bg-fade {
+      background:
+        linear-gradient(180deg, var(--canvas-night) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.32) 70%, var(--canvas-night) 100%),
+        linear-gradient(90deg, var(--canvas-night) 0%, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.03) 100%);
+    }
+  }
   .work-row { display: flex; flex-direction: column; gap: 8px; padding: 28px 0; border-bottom: 1px solid var(--hairline-soft); }
   .work-row:last-child { border-bottom: none; }
   .work-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
