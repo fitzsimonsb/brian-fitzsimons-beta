@@ -102,7 +102,28 @@
     padding: 24px 32px;
     background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0));
   }
-  .nav-wordmark { text-transform: uppercase; font-size: 13px; font-weight: 700; letter-spacing: 1.1px; text-decoration: none; }
+  .nav-badge { display: inline-flex; text-decoration: none; flex: none; }
+  .nav-badge-flip {
+    position: relative;
+    width: 40px; height: 40px;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+  }
+  .nav-badge:hover .nav-badge-flip,
+  .nav-badge:focus-visible .nav-badge-flip { transform: rotateY(180deg); }
+  .nav-badge-face {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden;
+    border: 1px solid var(--on-primary);
+    background: var(--canvas-night);
+    color: var(--on-primary);
+    overflow: hidden;
+  }
+  .nav-badge-back { transform: rotateY(180deg); }
+  .nav-badge-back img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (prefers-reduced-motion: reduce) { .nav-badge-flip { transition: none; } }
   .nav-links { display: flex; gap: 32px; list-style: none; margin: 0; padding: 0; }
   .nav-links a { text-transform: uppercase; font-size: 13px; font-weight: 700; letter-spacing: 1.1px; text-decoration: none; }
   .nav-toggle {
@@ -277,7 +298,18 @@
 <body>
 
 <nav class="nav">
-  <a class="nav-wordmark plain" href="#top">Brian Fitzsimons</a>
+  <a class="nav-badge" href="#top" aria-label="Brian Fitzsimons — Home">
+    <span class="nav-badge-flip">
+      <span class="nav-badge-face nav-badge-front">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="transform: scaleX(-1);">
+          <polygon points="12,4 21,20 3,20"></polygon>
+        </svg>
+      </span>
+      <span class="nav-badge-face nav-badge-back">
+        <img src="nav-avatar.jpg" alt="" width="40" height="40">
+      </span>
+    </span>
+  </a>
   <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <line class="ham-line ham-1" x1="3" y1="6" x2="21" y2="6"></line>
