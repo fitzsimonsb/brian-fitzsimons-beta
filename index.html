@@ -664,6 +664,42 @@
     return words[0].slice(0, 3).toUpperCase();
   }
 
+  // Raw TLE data carries no country/mission metadata, so this is a best-effort
+  // lookup keyed on well-known satellite name prefixes/families found in
+  // Celestrak's "visual" (bright/trackable) group — not an authoritative registry.
+  const SAT_CLASSIFY_RULES = [
+    { test: /^(ISS|ZARYA)/i, country: 'INTL', type: 'STATION' },
+    { test: /^(TIANGONG|CSS)/i, country: 'CHN', type: 'STATION' },
+    { test: /^NOAA\b/i, country: 'USA', type: 'WEATHER' },
+    { test: /^METOP/i, country: 'EU', type: 'WEATHER' },
+    { test: /^METEOR\b/i, country: 'RUS', type: 'WEATHER' },
+    { test: /^FENGYUN/i, country: 'CHN', type: 'WEATHER' },
+    { test: /^GOES/i, country: 'USA', type: 'WEATHER' },
+    { test: /^STARLINK/i, country: 'USA', type: 'TELECOMMS' },
+    { test: /^IRIDIUM/i, country: 'USA', type: 'TELECOMMS' },
+    { test: /^ONEWEB/i, country: 'UK', type: 'TELECOMMS' },
+    { test: /^CHINASAT/i, country: 'CHN', type: 'TELECOMMS' },
+    { test: /^INTELSAT/i, country: 'INTL', type: 'TELECOMMS' },
+    { test: /^GLONASS/i, country: 'RUS', type: 'NAVIGATION' },
+    { test: /^GALILEO/i, country: 'EU', type: 'NAVIGATION' },
+    { test: /^BEIDOU/i, country: 'CHN', type: 'NAVIGATION' },
+    { test: /^(GPS|NAVSTAR)/i, country: 'USA', type: 'NAVIGATION' },
+    { test: /^COSMOS/i, country: 'RUS', type: 'MILITARY' },
+    { test: /^USA[\s-]?\d/i, country: 'USA', type: 'MILITARY' },
+    { test: /^(YAOGAN|SHIJIAN|TIANHUI)/i, country: 'CHN', type: 'MILITARY' },
+    { test: /^(TERRA|AQUA|LANDSAT)\b/i, country: 'USA', type: 'EARTH OBS' },
+    { test: /^SENTINEL/i, country: 'EU', type: 'EARTH OBS' },
+    { test: /^ENVISAT/i, country: 'EU', type: 'EARTH OBS' },
+    { test: /^(HST|HUBBLE)/i, country: 'USA', type: 'SCIENCE' },
+    { test: /\b(R\/B|DEB)\b/i, country: '—', type: 'ROCKET BODY' },
+  ];
+  function classifySatellite(name) {
+    for (const rule of SAT_CLASSIFY_RULES) {
+      if (rule.test.test(name)) return { country: rule.country, type: rule.type };
+    }
+    return null; // unrecognized — omit rather than guess
+  }
+
   async function fetchVisitorLocation() {
     for (const url of SAT_GEO_URLS) {
       try {
@@ -744,7 +780,11 @@
     wrap.classList.add('pass-active');
     if (flag && flagName) {
       const cityAbbr = abbreviateCity(satObserver && satObserver.city);
-      flagName.textContent = sat.name + ' Overhead' + (cityAbbr ? ' · ' + cityAbbr : '');
+      const info = classifySatellite(sat.name);
+      const parts = [sat.name + ' Overhead'];
+      if (info) parts.push(info.country + ' · ' + info.type);
+      if (cityAbbr) parts.push(cityAbbr);
+      flagName.textContent = parts.join(' · ');
       flag.hidden = false;
     }
 
