@@ -175,6 +175,23 @@
   .hero-cta-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-top: 12px; }
 
   /* ---------- work ---------- */
+  #work { position: relative; overflow: hidden; }
+  .work-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+  .work-bg-image {
+    position: absolute; inset: -3%;
+    background-image: url('work-bg.jpg');
+    background-size: cover;
+    background-position: center 32%;
+    filter: grayscale(1) contrast(1.05) brightness(0.9);
+    opacity: 0.3;
+  }
+  .work-bg-fade {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, var(--canvas-night) 0%, rgba(0,0,0,0.35) 22%, rgba(0,0,0,0.45) 78%, var(--canvas-night) 100%),
+      linear-gradient(90deg, var(--canvas-night) 0%, rgba(0,0,0,0.15) 38%, rgba(0,0,0,0.15) 100%);
+  }
+  #work .band-inner { position: relative; z-index: 1; }
   .work-row { display: flex; flex-direction: column; gap: 8px; padding: 28px 0; border-bottom: 1px solid var(--hairline-soft); }
   .work-row:last-child { border-bottom: none; }
   .work-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
@@ -288,6 +305,10 @@
 </header>
 
 <section class="band" id="work">
+  <div class="work-bg" aria-hidden="true">
+    <div class="work-bg-image"></div>
+    <div class="work-bg-fade"></div>
+  </div>
   <div class="band-inner">
     <div class="micro-cap">Businesses &amp; Projects</div>
     <h2 class="display display-xl" style="margin-top: 8px;">Work</h2>
