@@ -691,6 +691,16 @@
     { test: /^SENTINEL/i, country: 'EU', type: 'EARTH OBS' },
     { test: /^ENVISAT/i, country: 'EU', type: 'EARTH OBS' },
     { test: /^(HST|HUBBLE)/i, country: 'USA', type: 'SCIENCE' },
+    { test: /^COSMO-?SKYMED/i, country: 'ITA', type: 'EARTH OBS' },
+    { test: /^RADARSAT/i, country: 'CAN', type: 'EARTH OBS' },
+    { test: /^(TERRASAR|TANDEM-X)/i, country: 'DEU', type: 'EARTH OBS' },
+    { test: /^PLEIADES/i, country: 'FRA', type: 'EARTH OBS' },
+    { test: /^SPOT\b/i, country: 'FRA', type: 'EARTH OBS' },
+    { test: /^RESURS/i, country: 'RUS', type: 'EARTH OBS' },
+    { test: /^METEOSAT/i, country: 'EU', type: 'WEATHER' },
+    { test: /^GLOBALSTAR/i, country: 'USA', type: 'TELECOMMS' },
+    { test: /^THURAYA/i, country: 'UAE', type: 'TELECOMMS' },
+    { test: /^ANIK/i, country: 'CAN', type: 'TELECOMMS' },
     { test: /\b(R\/B|DEB)\b/i, country: '—', type: 'ROCKET BODY' },
   ];
   function classifySatellite(name) {
