@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brian Fitzsimons — Product Manager, Maker, Writer</title>
+<meta name="description" content="Brian Fitzsimons — product manager, maker, and writer based in Galway, Ireland. Work, writing, and live technical demos.">
+<meta property="og:title" content="Brian Fitzsimons">
+<meta property="og:description" content="Product manager, maker, and writer based in Galway, Ireland.">
+<meta property="og:type" content="website">
+<!-- og:image — add a real card asset before shipping, e.g. og:image content="/og-card.png" -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --canvas-night: #000000;
+    --canvas-night-soft: #0a0a0a;
+    --canvas-night-soft-2: #111113;
+    --on-primary: #ffffff;
+    --on-primary-mute: #f0f0fa;
+    --hairline: #3a3a3f;
+    --hairline-soft: #232326;
+    --live-red: #ff3b30;
+    --font: 'Inter', 'Arial Narrow', Arial, Verdana, sans-serif;
+    --max: 1200px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--canvas-night);
+    color: var(--on-primary);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  a { color: var(--on-primary); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { opacity: 0.7; }
+  a.plain { text-decoration: none; }
+
+  img, video { max-width: 100%; display: block; }
+
+  .band { padding: 96px 24px; border-bottom: 1px solid var(--hairline); }
+  .band-inner { max-width: var(--max); margin: 0 auto; }
+  .band:last-of-type { border-bottom: none; }
+
+  .micro-cap {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: 0.96px;
+    color: var(--on-primary-mute);
+  }
+  .display {
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0;
+    color: var(--on-primary);
+  }
+  .display-xxl { font-size: clamp(40px, 8vw, 80px); line-height: 0.95; letter-spacing: 1.6px; }
+  .display-xl  { font-size: clamp(32px, 6vw, 60px); line-height: 1.1; letter-spacing: 1.2px; }
+  .body-lg { font-size: 16px; line-height: 1.7; letter-spacing: 0.32px; color: var(--on-primary-mute); font-weight: 400; }
+  .body-md { font-size: 15px; line-height: 1.6; letter-spacing: 0.32px; color: var(--on-primary-mute); font-weight: 400; }
+  .button-cap { text-transform: uppercase; font-size: 13px; font-weight: 700; letter-spacing: 1.1px; }
+
+  .ghost-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--on-primary);
+    color: var(--on-primary);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    padding: 18px 24px;
+    border-radius: 32px;
+    cursor: pointer;
+  }
+  .ghost-pill:hover { background: var(--on-primary); color: var(--canvas-night); opacity: 1; }
+  .ghost-pill:disabled { opacity: 0.35; cursor: not-allowed; }
+  .ghost-pill svg { flex: none; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  }
+  .nav-wordmark { text-transform: uppercase; font-size: 13px; font-weight: 700; letter-spacing: 1.1px; text-decoration: none; }
+  .nav-links { display: flex; gap: 32px; list-style: none; margin: 0; padding: 0; }
+  .nav-links a { text-transform: uppercase; font-size: 13px; font-weight: 700; letter-spacing: 1.1px; text-decoration: none; }
+  .nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: 1px solid var(--on-primary);
+    border-radius: 4px;
+    color: var(--on-primary);
+    z-index: 101;
+    position: relative;
+  }
+  .nav-toggle .ham-line { transition: transform 0.25s ease, opacity 0.2s ease; transform-origin: 12px 12px; }
+  .nav-toggle.open .ham-1 { transform: translateY(6px) rotate(45deg); }
+  .nav-toggle.open .ham-2 { opacity: 0; }
+  .nav-toggle.open .ham-3 { transform: translateY(-6px) rotate(-45deg); }
+  .nav-backdrop {
+    position: fixed; inset: 0; z-index: 90;
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .nav-backdrop.open { opacity: 1; pointer-events: auto; }
+  body.nav-open { overflow: hidden; }
+  @media (max-width: 767px) {
+    .nav-links {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: min(80vw, 300px);
+      background: var(--canvas-night); border-left: 1px solid var(--hairline);
+      flex-direction: column; padding: 100px 32px; gap: 28px;
+      transform: translateX(100%); transition: transform 0.25s ease;
+      z-index: 100; overflow-y: auto;
+    }
+    .nav-links.open { transform: translateX(0); }
+    .nav-toggle { display: inline-flex; }
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 140px 24px 96px;
+    border-bottom: 1px solid var(--hairline);
+    position: relative;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.5) 1px, transparent 0),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.35) 1px, transparent 0),
+      radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.4) 1px, transparent 0),
+      radial-gradient(1px 1px at 30% 85%, rgba(255,255,255,0.3) 1px, transparent 0),
+      radial-gradient(1px 1px at 92% 55%, rgba(255,255,255,0.45) 1px, transparent 0),
+      radial-gradient(1px 1px at 45% 40%, rgba(255,255,255,0.25) 1px, transparent 0);
+    background-size: 600px 600px;
+    background-repeat: repeat;
+    animation: drift-stars 240s linear infinite;
+  }
+  @keyframes drift-stars {
+    from { background-position: 0 0; }
+    to { background-position: 600px 600px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero { animation: none; }
+  }
+  .hero-inner { max-width: var(--max); margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+  .hero-status { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+  .hero-cta-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-top: 12px; }
+
+  /* ---------- work ---------- */
+  .work-row { display: flex; flex-direction: column; gap: 8px; padding: 28px 0; border-bottom: 1px solid var(--hairline-soft); }
+  .work-row:last-child { border-bottom: none; }
+  .work-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .work-title { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
+
+  /* ---------- writing ---------- */
+  .writing-item { display: flex; flex-direction: column; gap: 10px; padding: 28px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--canvas-night-soft); }
+  .writing-title { font-size: 24px; font-weight: 700; letter-spacing: 0.3px; }
+
+  /* ---------- creative ---------- */
+  .creative-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--hairline-soft); flex-wrap: wrap; }
+  .creative-row:last-child { border-bottom: none; }
+  #gh-chart { border-radius: 4px; filter: grayscale(0.15); background: var(--canvas-night-soft); min-height: 100px; }
+
+  /* ---------- lab ---------- */
+  .lab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-top: 32px; }
+  @media (max-width: 700px) { .lab-grid { grid-template-columns: 1fr; } }
+  .lab-card { display: flex; flex-direction: column; gap: 12px; background: var(--canvas-night-soft); padding: 24px; }
+  .lab-card-top { display: flex; justify-content: space-between; align-items: center; }
+  .lab-title { font-size: 18px; font-weight: 700; letter-spacing: 0.3px; }
+  .status-live { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--live-red); }
+  @keyframes live-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+  .live-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--live-red); display: inline-block; animation: live-blink 1.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+  .lab-demo-stage { display: none; flex-direction: column; gap: 10px; width: 100%; padding: 16px; }
+  .lab-demo-stage.open { display: flex; }
+  .lab-video { width: 100%; border-radius: 4px; background: #000; display: none; }
+  .lab-canvas { display: none; }
+  .lab-result { font-family: var(--font); font-size: 13px; letter-spacing: 0.4px; color: var(--on-primary-mute); min-height: 18px; }
+  .lab-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .lab-btn-row .ghost-pill { padding: 10px 16px; font-size: 11px; }
+
+  /* ---------- lab preview panel (idle mockup <-> live content) ---------- */
+  .lab-preview {
+    position: relative;
+    margin-top: 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: #0d0d0f;
+    min-height: 168px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lab-preview-idle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 168px;
+    color: var(--on-primary-mute);
+  }
+  .lab-preview-idle svg { opacity: 0.85; }
+  .lab-preview-idle .micro-cap { color: var(--on-primary-mute); opacity: 0.7; }
+  .lab-preview.launched .lab-preview-idle { display: none; }
+
+  /* ---------- footer ---------- */
+  .footer { padding: 64px 24px 40px; }
+  .footer-inner { max-width: var(--max); margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+  .footer-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 32px; align-items: flex-end; }
+  .footer-form { display: flex; gap: 10px; flex-wrap: wrap; }
+  .footer-form input {
+    background: var(--canvas-night); color: var(--on-primary); border: 1px solid var(--hairline);
+    border-radius: 4px; padding: 12px 14px; font-family: var(--font); font-size: 14px; min-width: 240px;
+  }
+  .footer-social { display: flex; gap: 20px; flex-wrap: wrap; list-style: none; padding: 0; margin: 0; }
+  .footer-social a { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; }
+  .footer-legal { font-size: 13px; color: var(--on-primary-mute); border-top: 1px solid var(--hairline); padding-top: 24px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-wordmark plain" href="#top">Brian Fitzsimons</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line class="ham-line ham-1" x1="3" y1="6" x2="21" y2="6"></line>
+      <line class="ham-line ham-2" x1="3" y1="12" x2="21" y2="12"></line>
+      <line class="ham-line ham-3" x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#writing">Writing</a></li>
+    <li><a href="#creative">Creative</a></li>
+    <li><a href="#lab">Lab</a></li>
+    <!-- External project links — add the real URLs once each is live -->
+    <li><a href="#" target="_blank" rel="noopener">Spacedock</a></li>
+    <li><a href="#" target="_blank" rel="noopener">Astra1</a></li>
+  </ul>
+</nav>
+<div class="nav-backdrop" id="nav-backdrop"></div>
+
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <div class="micro-cap">Profile — Galway, IE</div>
+    <h1 class="display display-xxl">Brian Fitzsimons</h1>
+    <p class="body-lg" style="max-width: 560px;">Product manager, maker, and writer building at the intersection of health data and human experience.</p>
+    <div class="hero-status micro-cap" id="hero-status">Loading local conditions…</div>
+    <div class="hero-cta-row">
+      <a href="#lab" class="ghost-pill">
+        View The Lab
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+      <a href="#work" class="body-lg" style="color: var(--on-primary);">See my work</a>
+    </div>
+  </div>
+</header>
+
+<section class="band" id="work">
+  <div class="band-inner">
+    <div class="micro-cap">Businesses &amp; Projects</div>
+    <h2 class="display display-xl" style="margin-top: 8px;">Work</h2>
+
+    <div style="margin-top: 40px;">
+      <div class="work-row">
+        <div class="work-row-top">
+          <span class="micro-cap">Healthcare Tech</span>
+          <a href="#" class="button-cap plain">View →</a>
+        </div>
+        <div class="work-title">Datavant</div>
+        <p class="body-md" style="max-width: 640px;">Building products at the intersection of health data, privacy, and interoperability.</p>
+      </div>
+      <div class="work-row">
+        <div class="work-row-top">
+          <span class="micro-cap">Side Venture</span>
+          <a href="#" class="button-cap plain">View →</a>
+        </div>
+        <div class="work-title">LifeSync</div>
+        <p class="body-md" style="max-width: 640px;">A wellness platform for modern living.</p>
+      </div>
+      <div class="work-row">
+        <div class="work-row-top">
+          <span class="micro-cap">AI Tools</span>
+          <a href="#" class="button-cap plain">Download →</a>
+        </div>
+        <div class="work-title">Claude PM Skills</div>
+        <p class="body-md" style="max-width: 640px;">Downloadable PM skill templates for Claude.</p>
+      </div>
+      <!-- Add the next project as a sibling .work-row -->
+    </div>
+  </div>
+</section>
+
+<section class="band" id="writing">
+  <div class="band-inner">
+    <div class="micro-cap">Writing &amp; Newsletter</div>
+    <h2 class="display display-xl" style="margin-top: 8px;">Writing</h2>
+
+    <div style="margin-top: 40px;">
+      <div class="writing-item">
+        <div class="micro-cap">25 May 2026 — 8 Min Read</div>
+        <div class="writing-title">The Case for Drinking Up</div>
+        <p class="body-md" style="max-width: 640px;">The most intelligent glass of red wine you can pour comes from 1,200 metres up the side of the Andes.</p>
+        <a href="#" class="button-cap plain" style="margin-top: 4px;">Read →</a>
+      </div>
+      <!-- Add the next entry as a sibling .writing-item once it's written — no placeholder slots -->
+    </div>
+  </div>
+</section>
+
+<section class="band" id="creative">
+  <div class="band-inner">
+    <div class="micro-cap">Music, Art &amp; Making</div>
+    <h2 class="display display-xl" style="margin-top: 8px;">Creative</h2>
+
+    <div style="margin-top: 40px;">
+      <div class="creative-row">
+        <div>
+          <div class="micro-cap">Mixtape</div>
+          <div class="work-title">Yoga &amp; Code</div>
+        </div>
+        <a href="https://soundcloud.com/yogaandcode" class="ghost-pill" style="padding: 12px 18px; font-size: 12px;" target="_blank" rel="noopener">Listen on SoundCloud</a>
+      </div>
+      <div class="creative-row" style="flex-direction: column; align-items: flex-start;">
+        <div class="micro-cap">Code — Live from GitHub</div>
+        <!-- No key required: renders fitzsimonsb's real contribution graph -->
+        <img id="gh-chart" src="https://ghchart.rshah.org/ff3b30/fitzsimonsb" alt="Brian's GitHub contribution graph" width="722" height="112" loading="lazy">
+        <a href="https://github.com/fitzsimonsb" class="button-cap plain" target="_blank" rel="noopener">View GitHub →</a>
+      </div>
+      <!-- Add a visual-art entry here once there's a real project to show -->
+    </div>
+  </div>
+</section>
+
+<section class="band" id="lab">
+  <div class="band-inner">
+    <div class="micro-cap">Systems Online</div>
+    <h2 class="display display-xl" style="margin-top: 8px;">The Lab</h2>
+    <p class="body-md" style="margin-top: 12px;">Four things I built rather than described.</p>
+
+    <div class="lab-grid">
+
+      <!-- Card 1: Emotion Detection — genuinely runs client-side -->
+      <div class="lab-card">
+        <div class="lab-card-top">
+          <span class="micro-cap">Sys.01 — Vision</span>
+          <span class="status-live"><span class="live-dot"></span>Live</span>
+        </div>
+        <div class="lab-title">Emotion Detection</div>
+        <p class="body-md">Real-time facial emotion classification, entirely client-side.</p>
+        <div class="micro-cap">Face-api.js — Webcam</div>
+        <div class="lab-btn-row">
+          <button class="ghost-pill" id="emotion-launch" onclick="startEmotionDetection()">Launch</button>
+        </div>
+        <div class="lab-preview" id="emotion-preview">
+          <div class="lab-preview-idle">
+            <svg width="160" height="90" viewBox="0 0 160 90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8,24 L8,8 L24,8"></path>
+              <path d="M136,8 L152,8 L152,24"></path>
+              <path d="M8,66 L8,82 L24,82"></path>
+              <path d="M152,66 L152,82 L136,82"></path>
+              <circle cx="80" cy="45" r="16" opacity="0.6"></circle>
+              <circle cx="74" cy="41" r="1.4" fill="currentColor" stroke="none"></circle>
+              <circle cx="86" cy="41" r="1.4" fill="currentColor" stroke="none"></circle>
+              <path d="M73,51 Q80,56 87,51" opacity="0.6"></path>
+            </svg>
+            <span class="micro-cap">Awaiting Feed</span>
+          </div>
+          <div class="lab-demo-stage" id="emotion-stage">
+            <video id="emotion-video" class="lab-video" autoplay muted playsinline></video>
+            <div class="lab-result" id="emotion-result"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Optical PPG — genuinely runs client-side, not medically accurate -->
+      <div class="lab-card">
+        <div class="lab-card-top">
+          <span class="micro-cap">Sys.02 — Biometric</span>
+          <span class="status-live"><span class="live-dot"></span>Live</span>
+        </div>
+        <div class="lab-title">Heart Rate (PPG)</div>
+        <p class="body-md">Heart rate from your phone camera and torch. Not medically accurate.</p>
+        <div class="micro-cap">Optical PPG — Camera</div>
+        <div class="lab-btn-row">
+          <button class="ghost-pill" id="ppg-launch" onclick="startPPG()">Launch</button>
+        </div>
+        <div class="lab-preview" id="ppg-preview">
+          <div class="lab-preview-idle">
+            <svg width="150" height="40" viewBox="0 0 150 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="0,20 30,20 38,20 44,4 50,36 56,20 64,20 150,20" opacity="0.7"></polyline>
+            </svg>
+            <span class="micro-cap">— — BPM</span>
+          </div>
+          <div class="lab-demo-stage" id="ppg-stage">
+            <video id="ppg-video" class="lab-video" autoplay muted playsinline></video>
+            <div class="lab-result" id="ppg-result"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Food Scanner — needs a server-side Claude Vision proxy; UI is real, backend call is a stub -->
+      <div class="lab-card">
+        <div class="lab-card-top">
+          <span class="micro-cap">Sys.03 — Vision</span>
+          <span class="status-live"><span class="live-dot"></span>Live</span>
+        </div>
+        <div class="lab-title">Food Scanner</div>
+        <p class="body-md">Point your camera at a meal, get a nutritional breakdown.</p>
+        <div class="micro-cap">Claude Vision — 1 Call</div>
+        <div class="lab-btn-row">
+          <button class="ghost-pill" id="food-launch" onclick="startFoodScanner()">Launch</button>
+        </div>
+        <div class="lab-preview" id="food-preview">
+          <div class="lab-preview-idle">
+            <svg width="160" height="90" viewBox="0 0 160 90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8,24 L8,8 L24,8"></path>
+              <path d="M136,8 L152,8 L152,24"></path>
+              <path d="M8,66 L8,82 L24,82"></path>
+              <path d="M152,66 L152,82 L136,82"></path>
+              <circle cx="80" cy="45" r="14" stroke-dasharray="3 4" opacity="0.6"></circle>
+              <path d="M80,33 L80,39 M80,51 L80,57 M68,45 L74,45 M86,45 L92,45" opacity="0.6"></path>
+            </svg>
+            <span class="micro-cap">No Image Captured</span>
+          </div>
+          <div class="lab-demo-stage" id="food-stage">
+            <video id="food-video" class="lab-video" autoplay muted playsinline></video>
+            <div class="lab-btn-row">
+              <button class="ghost-pill" onclick="analyzeFood()">Capture &amp; Analyze</button>
+            </div>
+            <div class="lab-result" id="food-result"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Spacedock — a separate external project; links out once it's live -->
+      <div class="lab-card">
+        <div class="lab-card-top">
+          <span class="micro-cap">Sys.04 — Astro</span>
+          <span class="micro-cap">In Progress</span>
+        </div>
+        <div class="lab-title">Spacedock</div>
+        <p class="body-md">Analysing the world around us — live satellites, planes, and the stars visible tonight, from wherever you're standing.</p>
+        <div class="micro-cap">Geolocation — Live Sky Data</div>
+        <div class="lab-btn-row">
+          <!-- Add the real Spacedock URL here once it's live — matches the nav link -->
+          <a href="#" class="ghost-pill" target="_blank" rel="noopener">
+            Open Spacedock
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
+          </a>
+        </div>
+        <div class="lab-preview">
+          <div class="lab-preview-idle">
+            <svg width="90" height="90" viewBox="0 0 90 90" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="45" cy="45" r="14" opacity="0.7"></circle>
+              <circle cx="45" cy="45" r="28" opacity="0.45"></circle>
+              <circle cx="45" cy="45" r="40" opacity="0.25"></circle>
+              <circle cx="45" cy="17" r="2" fill="currentColor" stroke="none"></circle>
+              <circle cx="73" cy="45" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="20" cy="60" r="1.6" fill="currentColor" stroke="none"></circle>
+              <circle cx="62" cy="72" r="1.4" fill="currentColor" stroke="none"></circle>
+            </svg>
+            <span class="micro-cap">Satellites · Planes · Stars</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="micro-cap">Stay in the loop</div>
+        <div class="work-title" style="margin-top: 6px;">Writing, dispatches, and occasional thoughts.</div>
+      </div>
+      <!-- Non-functional stub — wire to an email provider (Buttondown, ConvertKit, etc.) -->
+      <form class="footer-form" onsubmit="event.preventDefault(); alert('Wire this form to your email provider.');">
+        <input type="email" placeholder="you@email.com" required>
+        <button class="ghost-pill" type="submit" style="padding: 12px 18px; font-size: 12px;">Subscribe</button>
+      </form>
+    </div>
+    <ul class="footer-social">
+      <li><a href="https://github.com/fitzsimonsb" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="#" target="_blank" rel="noopener">LinkedIn</a></li>
+      <li><a href="#" target="_blank" rel="noopener">X</a></li>
+      <li><a href="#" target="_blank" rel="noopener">Spotify</a></li>
+      <li><a href="#" target="_blank" rel="noopener">Instagram</a></li>
+    </ul>
+    <div class="footer-legal">© 2026 Brian Fitzsimons</div>
+  </div>
+</footer>
+
+<script>
+  // ---------- nav ----------
+  const navToggle = document.getElementById('nav-toggle');
+  const navLinks = document.getElementById('nav-links');
+  const navBackdrop = document.getElementById('nav-backdrop');
+
+  function setNavOpen(open) {
+    navLinks.classList.toggle('open', open);
+    navToggle.classList.toggle('open', open);
+    navBackdrop.classList.toggle('open', open);
+    document.body.classList.toggle('nav-open', open);
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  navToggle.addEventListener('click', () => setNavOpen(!navLinks.classList.contains('open')));
+  navBackdrop.addEventListener('click', () => setNavOpen(false));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setNavOpen(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setNavOpen(false);
+  });
+
+  // ---------- time + weather (Galway, Open-Meteo — no API key required) ----------
+  async function loadHeroStatus() {
+    const el = document.getElementById('hero-status');
+    const timeStr = new Intl.DateTimeFormat('en-IE', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Dublin'
+    }).format(new Date());
+    let weatherStr = '';
+    try {
+      const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=53.2707&longitude=-9.0568&current=temperature_2m&timezone=Europe%2FDublin');
+      const data = await res.json();
+      const temp = data && data.current && data.current.temperature_2m;
+      if (typeof temp === 'number') weatherStr = Math.round(temp) + '°C Galway · ';
+    } catch (err) {
+      weatherStr = 'Galway · ';
+    }
+    el.textContent = weatherStr + timeStr + ' Local · Working at Datavant';
+  }
+  loadHeroStatus();
+
+  // ---------- Lab: Emotion Detection ----------
+  const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+  let faceApiLoaded = false;
+  let faceApiScriptLoading = null;
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function startEmotionDetection() {
+    const stage = document.getElementById('emotion-stage');
+    const video = document.getElementById('emotion-video');
+    const result = document.getElementById('emotion-result');
+    const launchBtn = document.getElementById('emotion-launch');
+    stage.classList.add('open');
+    document.getElementById('emotion-preview').classList.add('launched');
+    launchBtn.disabled = true;
+    result.textContent = 'Loading models…';
+    try {
+      if (!faceApiScriptLoading) {
+        faceApiScriptLoading = loadScript('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js');
+      }
+      await faceApiScriptLoading;
+      if (!faceApiLoaded) {
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(FACE_MODEL_URL)
+        ]);
+        faceApiLoaded = true;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      video.srcObject = stream;
+      video.style.display = 'block';
+      result.textContent = 'Scanning…';
+      emotionDetectLoop();
+    } catch (err) {
+      result.textContent = 'Camera unavailable — ' + (err && err.message ? err.message : 'permission denied or no models loaded.');
+    } finally {
+      launchBtn.disabled = false;
+    }
+  }
+
+  function emotionDetectLoop() {
+    const video = document.getElementById('emotion-video');
+    const result = document.getElementById('emotion-result');
+    const tick = async () => {
+      if (!video.srcObject) return;
+      if (video.readyState === 4) {
+        try {
+          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+          if (detection && detection.expressions) {
+            const top = Object.entries(detection.expressions).sort((a, b) => b[1] - a[1])[0];
+            result.textContent = top[0].toUpperCase() + ' — ' + Math.round(top[1] * 100) + '%';
+          } else {
+            result.textContent = 'No face detected';
+          }
+        } catch (e) { /* keep looping */ }
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  // ---------- Lab: Optical PPG ----------
+  let ppgSamples = [];
+  let ppgStart = null;
+  const ppgCanvas = document.createElement('canvas');
+  ppgCanvas.width = 20; ppgCanvas.height = 20;
+  const ppgCtx = ppgCanvas.getContext('2d');
+
+  async function startPPG() {
+    const stage = document.getElementById('ppg-stage');
+    const video = document.getElementById('ppg-video');
+    const result = document.getElementById('ppg-result');
+    stage.classList.add('open');
+    document.getElementById('ppg-preview').classList.add('launched');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = stream;
+      video.style.display = 'block';
+      await video.play();
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if (caps.torch) {
+        try { await track.applyConstraints({ advanced: [{ torch: true }] }); } catch (e) { /* torch not controllable */ }
+      }
+      ppgSamples = [];
+      ppgStart = performance.now();
+      result.textContent = 'Cover the rear camera with your fingertip — measuring for 15s…';
+      requestAnimationFrame(samplePPG);
+    } catch (err) {
+      result.textContent = 'Camera unavailable — ' + (err && err.message ? err.message : 'permission denied.');
+    }
+  }
+
+  function samplePPG(t) {
+    const video = document.getElementById('ppg-video');
+    if (video.readyState === 4) {
+      ppgCtx.drawImage(video, 0, 0, 20, 20);
+      const frame = ppgCtx.getImageData(0, 0, 20, 20).data;
+      let sum = 0;
+      for (let i = 0; i < frame.length; i += 4) sum += frame[i];
+      ppgSamples.push({ t, avg: sum / (frame.length / 4) });
+    }
+    if (t - ppgStart < 15000) {
+      requestAnimationFrame(samplePPG);
+    } else {
+      computePPG();
+    }
+  }
+
+  function computePPG() {
+    const result = document.getElementById('ppg-result');
+    if (ppgSamples.length < 30) {
+      result.textContent = 'Not enough signal — try again with steadier coverage.';
+      return;
+    }
+    const vals = ppgSamples.map(s => s.avg);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const centered = vals.map(v => v - mean);
+    let peaks = 0;
+    for (let i = 1; i < centered.length - 1; i++) {
+      if (centered[i] > centered[i - 1] && centered[i] > centered[i + 1] && centered[i] > 0) peaks++;
+    }
+    const durationSec = (ppgSamples[ppgSamples.length - 1].t - ppgSamples[0].t) / 1000;
+    const bpm = Math.round((peaks / durationSec) * 60);
+    result.textContent = (bpm > 30 && bpm < 220) ? ('~' + bpm + ' BPM (estimate, not medically accurate)') : 'Signal too noisy — try again.';
+  }
+
+  // ---------- Lab: Food Scanner (UI is real; backend is a stub) ----------
+  async function startFoodScanner() {
+    const stage = document.getElementById('food-stage');
+    const video = document.getElementById('food-video');
+    const result = document.getElementById('food-result');
+    stage.classList.add('open');
+    document.getElementById('food-preview').classList.add('launched');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = stream;
+      video.style.display = 'block';
+      result.textContent = '';
+    } catch (err) {
+      result.textContent = 'Camera unavailable — ' + (err && err.message ? err.message : 'permission denied.');
+    }
+  }
+
+  async function analyzeFood() {
+    const video = document.getElementById('food-video');
+    const result = document.getElementById('food-result');
+    result.textContent = 'Analyzing…';
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 320;
+    canvas.height = video.videoHeight || 240;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/jpeg', 0.7);
+    try {
+      // Wire this endpoint to a server-side Claude Vision proxy (matches the pattern
+      // already deployed on the live site — ANTHROPIC_API_KEY stays server-side).
+      const res = await fetch('/api/food-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData })
+      });
+      if (!res.ok) throw new Error('endpoint not deployed');
+      const data = await res.json();
+      result.textContent = data.summary || 'Done.';
+    } catch (err) {
+      result.textContent = 'This demo calls a server-side Claude Vision endpoint at /api/food-scan — not wired in this static mockup.';
+    }
+  }
+
+</script>
+
+</body>
+</html>
