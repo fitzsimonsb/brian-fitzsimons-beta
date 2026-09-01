@@ -310,7 +310,26 @@
     transition: opacity 0.25s ease;
   }
   .food-frame-guide.active { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { .food-frame-guide { transition: none; } }
+  .ppg-video-wrap { position: relative; }
+  .ppg-frame-guide {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40%;
+    max-width: 150px;
+    aspect-ratio: 100 / 130;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.9);
+    stroke-width: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .ppg-frame-guide.active { opacity: 1; }
+  .ppg-frame-guide ellipse:nth-child(2) { stroke-opacity: 0.75; }
+  .ppg-frame-guide ellipse:nth-child(3) { stroke-opacity: 0.55; }
+  .ppg-frame-guide ellipse:nth-child(4) { stroke-opacity: 0.4; }
+  @media (prefers-reduced-motion: reduce) { .food-frame-guide, .ppg-frame-guide { transition: none; } }
   .lab-canvas { display: none; }
   .emotion-video-wrap { position: relative; width: 100%; border-radius: 4px; overflow: hidden; }
   .emotion-video-wrap .lab-video { display: none; }
@@ -590,7 +609,15 @@
             <span class="micro-cap">— — BPM</span>
           </div>
           <div class="lab-demo-stage" id="ppg-stage">
-            <video id="ppg-video" class="lab-video" autoplay muted playsinline></video>
+            <div class="ppg-video-wrap">
+              <video id="ppg-video" class="lab-video" autoplay muted playsinline></video>
+              <svg class="ppg-frame-guide" id="ppg-frame-guide" viewBox="0 0 100 130" aria-hidden="true">
+                <ellipse cx="50" cy="65" rx="46" ry="60"></ellipse>
+                <ellipse cx="50" cy="65" rx="34" ry="44"></ellipse>
+                <ellipse cx="50" cy="65" rx="22" ry="29"></ellipse>
+                <ellipse cx="50" cy="65" rx="10" ry="13"></ellipse>
+              </svg>
+            </div>
             <div class="lab-result" id="ppg-result"></div>
           </div>
         </div>
@@ -1230,12 +1257,14 @@
     const video = document.getElementById('ppg-video');
     const result = document.getElementById('ppg-result');
     const launchBtn = document.getElementById('ppg-launch');
+    const frameGuide = document.getElementById('ppg-frame-guide');
     stage.classList.add('open');
     document.getElementById('ppg-preview').classList.add('launched');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       video.srcObject = stream;
       video.style.display = 'block';
+      frameGuide.classList.add('active');
       await video.play();
       const track = stream.getVideoTracks()[0];
       const caps = track.getCapabilities ? track.getCapabilities() : {};
@@ -1259,12 +1288,14 @@
     const video = document.getElementById('ppg-video');
     const result = document.getElementById('ppg-result');
     const launchBtn = document.getElementById('ppg-launch');
+    const frameGuide = document.getElementById('ppg-frame-guide');
     ppgRunning = false;
     if (video.srcObject) {
       video.srcObject.getTracks().forEach(track => track.stop());
       video.srcObject = null;
     }
     video.style.display = 'none';
+    frameGuide.classList.remove('active');
     result.textContent = '';
     stage.classList.remove('open');
     document.getElementById('ppg-preview').classList.remove('launched');
