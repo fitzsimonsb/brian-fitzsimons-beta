@@ -579,7 +579,7 @@
         </div>
       </div>
 
-      <!-- Card 3: Food Scanner — needs a server-side Claude Vision proxy; UI is real, backend call is a stub -->
+      <!-- Card 3: Food Scanner — calls /api/food-scan, a Vercel serverless function using Claude Vision -->
       <div class="lab-card">
         <div class="lab-card-top">
           <span class="micro-cap">Sys.03 — Vision</span>
@@ -1268,7 +1268,7 @@
     result.textContent = (bpm > 30 && bpm < 220) ? ('~' + bpm + ' BPM (estimate, not medically accurate)') : 'Signal too noisy — try again.';
   }
 
-  // ---------- Lab: Food Scanner (UI is real; backend is a stub) ----------
+  // ---------- Lab: Food Scanner (calls /api/food-scan — Claude Vision, server-side) ----------
   async function startFoodScanner() {
     const stage = document.getElementById('food-stage');
     const video = document.getElementById('food-video');
@@ -1295,18 +1295,21 @@
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = canvas.toDataURL('image/jpeg', 0.7);
     try {
-      // Wire this endpoint to a server-side Claude Vision proxy (matches the pattern
-      // already deployed on the live site — ANTHROPIC_API_KEY stays server-side).
+      // Server-side proxy at /api/food-scan — a Vercel serverless function that calls
+      // Claude Vision. ANTHROPIC_API_KEY stays server-side, never reaches the browser.
       const res = await fetch('/api/food-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imageData })
       });
-      if (!res.ok) throw new Error('endpoint not deployed');
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        result.textContent = data.error || 'Analysis failed — try again in a moment.';
+        return;
+      }
       result.textContent = data.summary || 'Done.';
     } catch (err) {
-      result.textContent = 'This demo calls a server-side Claude Vision endpoint at /api/food-scan — not wired in this static mockup.';
+      result.textContent = 'Could not reach the food scanner right now — check your connection and try again.';
     }
   }
 
