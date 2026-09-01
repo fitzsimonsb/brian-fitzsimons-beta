@@ -2,4 +2,4 @@
 
 Personal portfolio site. Single-file HTML/CSS/JS, no build step.
 
-Live: https://brian-fitzsimons-beta.vercel.app
+Live: https://bfitzx.com
