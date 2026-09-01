@@ -295,6 +295,22 @@
   .lab-demo-stage { display: none; flex-direction: column; gap: 10px; width: 100%; padding: 16px; }
   .lab-demo-stage.open { display: flex; }
   .lab-video { width: 100%; border-radius: 4px; background: #000; display: none; }
+  .food-video-wrap { position: relative; }
+  .food-frame-guide {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 58%;
+    aspect-ratio: 1 / 1;
+    max-width: 220px;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .food-frame-guide.active { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .food-frame-guide { transition: none; } }
   .lab-canvas { display: none; }
   .emotion-video-wrap { position: relative; width: 100%; border-radius: 4px; overflow: hidden; }
   .emotion-video-wrap .lab-video { display: none; }
@@ -601,7 +617,10 @@
             <span class="micro-cap">No Image Captured</span>
           </div>
           <div class="lab-demo-stage" id="food-stage">
-            <video id="food-video" class="lab-video" autoplay muted playsinline></video>
+            <div class="food-video-wrap">
+              <video id="food-video" class="lab-video" autoplay muted playsinline></video>
+              <div class="food-frame-guide" id="food-frame-guide" aria-hidden="true"></div>
+            </div>
             <div class="lab-btn-row">
               <button class="ghost-pill" onclick="analyzeFood()">Capture &amp; Analyze</button>
             </div>
@@ -1294,12 +1313,14 @@
     const video = document.getElementById('food-video');
     const result = document.getElementById('food-result');
     const launchBtn = document.getElementById('food-launch');
+    const frameGuide = document.getElementById('food-frame-guide');
     stage.classList.add('open');
     document.getElementById('food-preview').classList.add('launched');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       video.srcObject = stream;
       video.style.display = 'block';
+      frameGuide.classList.add('active');
       result.textContent = '';
       launchBtn.textContent = 'Stop Demo';
       launchBtn.onclick = stopFoodScanner;
@@ -1313,11 +1334,13 @@
     const video = document.getElementById('food-video');
     const result = document.getElementById('food-result');
     const launchBtn = document.getElementById('food-launch');
+    const frameGuide = document.getElementById('food-frame-guide');
     if (video.srcObject) {
       video.srcObject.getTracks().forEach(track => track.stop());
       video.srcObject = null;
     }
     video.style.display = 'none';
+    frameGuide.classList.remove('active');
     result.textContent = '';
     stage.classList.remove('open');
     document.getElementById('food-preview').classList.remove('launched');
