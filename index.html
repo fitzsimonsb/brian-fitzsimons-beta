@@ -430,7 +430,7 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
       <!-- Add the real LinkedIn URL here — matches the footer link -->
-      <a href="#" class="body-lg availability-link" target="_blank" rel="noopener">Availability <span id="availability-typed"></span><span class="availability-cursor" id="availability-cursor"></span></a>
+      <a href="#" class="body-lg availability-link" target="_blank" rel="noopener">Status - <span id="availability-typed"></span><span class="availability-cursor" id="availability-cursor"></span></a>
     </div>
   </div>
 </header>
@@ -736,7 +736,7 @@
     const target = document.getElementById('availability-typed');
     const cursor = document.getElementById('availability-cursor');
     if (!target || !cursor) return;
-    const text = '[Available to Contract]';
+    const text = 'Available on Contract from October 2026';
     if (prefersReducedMotion()) {
       target.textContent = text;
       cursor.classList.add('blink');
