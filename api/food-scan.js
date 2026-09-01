@@ -9,9 +9,57 @@
 const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001'; // fast + inexpensive, supports vision
 const MAX_BASE64_LEN = 6_000_000; // ~4.5MB decoded, keeps us under Vercel's request body limit
 
+// ---- simple per-IP rate limit ----
+// In-memory, so it only holds the line within one warm serverless instance — it resets
+// on a cold start and isn't shared across concurrent instances/regions. That means it's
+// not a hard guarantee, but for a personal portfolio demo it's enough to stop a casual
+// bot or script from hammering (and billing) this endpoint. If this ever needs a real
+// guarantee under higher traffic, swap this Map for Vercel KV or Upstash Redis.
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT_MAX = 6; // requests per window per IP — a curious visitor trying a few
+                            // meals is fine; a script looping the endpoint is not.
+const MAX_TRACKED_IPS = 5000; // memory safety valve so this can't grow unbounded
+
+const hits = new Map(); // ip -> { count, windowStart }
+
+function getClientIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  if (fwd) return fwd.split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || 'unknown';
+}
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = hits.get(ip);
+
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    hits.set(ip, { count: 1, windowStart: now });
+    if (hits.size > MAX_TRACKED_IPS) {
+      hits.delete(hits.keys().next().value); // evict the oldest tracked IP
+    }
+    return { limited: false };
+  }
+
+  entry.count += 1;
+  if (entry.count > RATE_LIMIT_MAX) {
+    const retryAfterSec = Math.ceil((entry.windowStart + RATE_LIMIT_WINDOW_MS - now) / 1000);
+    return { limited: true, retryAfterSec };
+  }
+  return { limited: false };
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed.' });
+    return;
+  }
+
+  const ip = getClientIp(req);
+  const { limited, retryAfterSec } = checkRateLimit(ip);
+  if (limited) {
+    const mins = Math.ceil(retryAfterSec / 60);
+    res.setHeader('Retry-After', String(retryAfterSec));
+    res.status(429).json({ error: `Too many scans from this connection — try again in about ${mins} minute${mins === 1 ? '' : 's'}.` });
     return;
   }
 
