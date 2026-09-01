@@ -120,7 +120,20 @@ module.exports = async function handler(req, res) {
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text().catch(() => '');
       console.error('Anthropic API error', anthropicRes.status, errText);
-      res.status(502).json({ error: 'Vision analysis failed — try again in a moment.' });
+      // Surface the real reason (status + Anthropic's own message) instead of a generic
+      // string — none of this can contain the API key, so it's safe to show the visitor,
+      // and it means a misconfigured key/model/billing issue is diagnosable from the
+      // demo itself rather than needing a trip into Vercel's function logs.
+      let detail = '';
+      try {
+        const parsed = JSON.parse(errText);
+        detail = (parsed && parsed.error && parsed.error.message) || '';
+      } catch (e) {
+        detail = errText.slice(0, 200);
+      }
+      res.status(502).json({
+        error: `Vision analysis failed (${anthropicRes.status}${detail ? ': ' + detail : ''})`
+      });
       return;
     }
 
