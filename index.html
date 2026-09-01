@@ -1205,6 +1205,7 @@
   // ---------- Lab: Optical PPG ----------
   let ppgSamples = [];
   let ppgStart = null;
+  let ppgRunning = false;
   const ppgCanvas = document.createElement('canvas');
   ppgCanvas.width = 20; ppgCanvas.height = 20;
   const ppgCtx = ppgCanvas.getContext('2d');
@@ -1213,6 +1214,7 @@
     const stage = document.getElementById('ppg-stage');
     const video = document.getElementById('ppg-video');
     const result = document.getElementById('ppg-result');
+    const launchBtn = document.getElementById('ppg-launch');
     stage.classList.add('open');
     document.getElementById('ppg-preview').classList.add('launched');
     try {
@@ -1227,14 +1229,36 @@
       }
       ppgSamples = [];
       ppgStart = performance.now();
+      ppgRunning = true;
       result.textContent = 'Cover the rear camera with your fingertip — measuring for 15s…';
+      launchBtn.textContent = 'Stop Demo';
+      launchBtn.onclick = stopPPG;
       requestAnimationFrame(samplePPG);
     } catch (err) {
       result.textContent = 'Camera unavailable — ' + (err && err.message ? err.message : 'permission denied.');
     }
   }
 
+  function stopPPG() {
+    const stage = document.getElementById('ppg-stage');
+    const video = document.getElementById('ppg-video');
+    const result = document.getElementById('ppg-result');
+    const launchBtn = document.getElementById('ppg-launch');
+    ppgRunning = false;
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+    video.style.display = 'none';
+    result.textContent = '';
+    stage.classList.remove('open');
+    document.getElementById('ppg-preview').classList.remove('launched');
+    launchBtn.textContent = 'Launch';
+    launchBtn.onclick = startPPG;
+  }
+
   function samplePPG(t) {
+    if (!ppgRunning) return;
     const video = document.getElementById('ppg-video');
     if (video.readyState === 4) {
       ppgCtx.drawImage(video, 0, 0, 20, 20);
@@ -1273,6 +1297,7 @@
     const stage = document.getElementById('food-stage');
     const video = document.getElementById('food-video');
     const result = document.getElementById('food-result');
+    const launchBtn = document.getElementById('food-launch');
     stage.classList.add('open');
     document.getElementById('food-preview').classList.add('launched');
     try {
@@ -1280,9 +1305,28 @@
       video.srcObject = stream;
       video.style.display = 'block';
       result.textContent = '';
+      launchBtn.textContent = 'Stop Demo';
+      launchBtn.onclick = stopFoodScanner;
     } catch (err) {
       result.textContent = 'Camera unavailable — ' + (err && err.message ? err.message : 'permission denied.');
     }
+  }
+
+  function stopFoodScanner() {
+    const stage = document.getElementById('food-stage');
+    const video = document.getElementById('food-video');
+    const result = document.getElementById('food-result');
+    const launchBtn = document.getElementById('food-launch');
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+    video.style.display = 'none';
+    result.textContent = '';
+    stage.classList.remove('open');
+    document.getElementById('food-preview').classList.remove('launched');
+    launchBtn.textContent = 'Launch';
+    launchBtn.onclick = startFoodScanner;
   }
 
   async function analyzeFood() {
