@@ -362,6 +362,33 @@
   .lab-preview-idle svg { opacity: 0.85; }
   .lab-preview-idle .micro-cap { color: var(--on-primary-mute); opacity: 0.7; }
   .lab-preview.launched .lab-preview-idle { display: none; }
+  .lab-preview-idle.has-photo { position: relative; }
+  .emotion-idle-photo-wrap { position: absolute; inset: 0; overflow: hidden; }
+  .emotion-idle-photo-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+    filter: grayscale(1) contrast(1.05) brightness(0.6);
+    opacity: 0.9;
+    display: block;
+  }
+  .emotion-idle-fade {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 72% 68% at 50% 42%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 78%, var(--canvas-night) 100%),
+      linear-gradient(90deg, var(--canvas-night) 0%, rgba(0,0,0,0) 16%, rgba(0,0,0,0) 84%, var(--canvas-night) 100%),
+      linear-gradient(180deg, var(--canvas-night) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, var(--canvas-night) 100%);
+  }
+  .lab-preview-idle.has-photo .micro-cap {
+    position: relative;
+    z-index: 1;
+    opacity: 0.9;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
 
   /* ---------- footer ---------- */
   .footer { padding: 64px 24px 40px; }
@@ -504,17 +531,11 @@
           <button class="ghost-pill" id="emotion-launch" onclick="startEmotionDetection()">Launch</button>
         </div>
         <div class="lab-preview" id="emotion-preview">
-          <div class="lab-preview-idle">
-            <svg width="160" height="90" viewBox="0 0 160 90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M8,24 L8,8 L24,8"></path>
-              <path d="M136,8 L152,8 L152,24"></path>
-              <path d="M8,66 L8,82 L24,82"></path>
-              <path d="M152,66 L152,82 L136,82"></path>
-              <circle cx="80" cy="45" r="16" opacity="0.6"></circle>
-              <circle cx="74" cy="41" r="1.4" fill="currentColor" stroke="none"></circle>
-              <circle cx="86" cy="41" r="1.4" fill="currentColor" stroke="none"></circle>
-              <path d="M73,51 Q80,56 87,51" opacity="0.6"></path>
-            </svg>
+          <div class="lab-preview-idle has-photo">
+            <div class="emotion-idle-photo-wrap" aria-hidden="true">
+              <img src="emotion-idle.jpg" alt="" loading="lazy">
+              <div class="emotion-idle-fade"></div>
+            </div>
             <span class="micro-cap">Awaiting Feed</span>
           </div>
           <div class="lab-demo-stage" id="emotion-stage">
