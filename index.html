@@ -24,6 +24,7 @@
     --hairline: #3a3a3f;
     --hairline-soft: #232326;
     --live-red: #ff3b30;
+    --scan-green: #46ff8c;
     --font: 'Inter', 'Arial Narrow', Arial, Verdana, sans-serif;
     --max: 1200px;
   }
@@ -310,7 +311,24 @@
   .emotion-scan-overlay.active { opacity: 1; }
   #emotion-video.scanning { filter: brightness(0.55) contrast(1.15) saturate(2.2) sepia(0.5) hue-rotate(75deg); }
   @media (prefers-reduced-motion: reduce) { .emotion-scan-overlay { transition: none; } }
+  .emotion-canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .emotion-canvas.active { opacity: 1; }
   .lab-result { font-family: var(--font); font-size: 13px; letter-spacing: 0.4px; color: var(--on-primary-mute); min-height: 18px; }
+  .emotion-weights { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; }
+  .emotion-weight-row { display: grid; grid-template-columns: 78px 1fr 32px; align-items: center; gap: 8px; }
+  .emotion-weight-label { font-family: var(--font); font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--on-primary-mute); opacity: 0.75; }
+  .emotion-weight-row.top .emotion-weight-label { color: var(--scan-green); opacity: 1; }
+  .emotion-weight-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .emotion-weight-bar-fill { height: 100%; width: 0%; border-radius: 2px; background: var(--scan-green); opacity: 0.55; transition: width 0.15s linear; }
+  .emotion-weight-row.top .emotion-weight-bar-fill { opacity: 1; }
+  .emotion-weight-pct { font-family: var(--font); font-size: 10px; font-variant-numeric: tabular-nums; color: var(--on-primary-mute); opacity: 0.75; text-align: right; }
+  .emotion-weight-row.top .emotion-weight-pct { color: var(--scan-green); opacity: 1; }
   .lab-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .lab-btn-row .ghost-pill { padding: 10px 16px; font-size: 11px; }
 
@@ -499,8 +517,10 @@
             <div class="emotion-video-wrap">
               <video id="emotion-video" class="lab-video" autoplay muted playsinline></video>
               <div class="emotion-scan-overlay" id="emotion-scan-overlay" aria-hidden="true"></div>
+              <canvas class="emotion-canvas" id="emotion-canvas" aria-hidden="true"></canvas>
             </div>
             <div class="lab-result" id="emotion-result"></div>
+            <div class="emotion-weights" id="emotion-weights"></div>
           </div>
         </div>
       </div>
@@ -1005,6 +1025,8 @@
     const result = document.getElementById('emotion-result');
     const launchBtn = document.getElementById('emotion-launch');
     const overlay = document.getElementById('emotion-scan-overlay');
+    const canvas = document.getElementById('emotion-canvas');
+    const weights = document.getElementById('emotion-weights');
     if (video.srcObject) {
       video.srcObject.getTracks().forEach(track => track.stop());
       video.srcObject = null;
@@ -1012,26 +1034,85 @@
     video.style.display = 'none';
     video.classList.remove('scanning');
     overlay.classList.remove('active');
+    canvas.classList.remove('active');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     result.textContent = '';
+    weights.innerHTML = '';
     stage.classList.remove('open');
     document.getElementById('emotion-preview').classList.remove('launched');
     launchBtn.textContent = 'Launch';
     launchBtn.onclick = startEmotionDetection;
   }
 
+  // Draws a HUD-style bounding box (corner brackets, matching the site's idle-state
+  // iconography) around the detected face, sized to the face-api box in video-pixel space.
+  function drawFaceBox(ctx, box, canvasW, canvasH) {
+    ctx.clearRect(0, 0, canvasW, canvasH);
+    const { x, y, width: w, height: h } = box;
+    const arm = Math.max(10, Math.min(w, h) * 0.18);
+    ctx.strokeStyle = 'rgba(70, 255, 140, 0.5)';
+    ctx.lineWidth = Math.max(1, canvasW * 0.0018);
+    ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = '#46ff8c';
+    ctx.lineWidth = Math.max(2, canvasW * 0.004);
+    ctx.lineCap = 'round';
+    const corners = [
+      [[x, y + arm], [x, y], [x + arm, y]],
+      [[x + w - arm, y], [x + w, y], [x + w, y + arm]],
+      [[x, y + h - arm], [x, y + h], [x + arm, y + h]],
+      [[x + w - arm, y + h], [x + w, y + h], [x + w, y + h - arm]]
+    ];
+    corners.forEach(pts => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      ctx.lineTo(pts[1][0], pts[1][1]);
+      ctx.lineTo(pts[2][0], pts[2][1]);
+      ctx.stroke();
+    });
+  }
+
+  // Renders every expression face-api scored (not just the top one) as a weighted bar list.
+  function renderEmotionWeights(container, sortedExpressions) {
+    container.innerHTML = '';
+    sortedExpressions.forEach(([name, score], i) => {
+      const row = document.createElement('div');
+      row.className = 'emotion-weight-row' + (i === 0 ? ' top' : '');
+      const pct = Math.round(score * 100);
+      row.innerHTML =
+        '<span class="emotion-weight-label">' + name + '</span>' +
+        '<span class="emotion-weight-bar"><span class="emotion-weight-bar-fill" style="width:' + pct + '%"></span></span>' +
+        '<span class="emotion-weight-pct">' + pct + '%</span>';
+      container.appendChild(row);
+    });
+  }
+
   function emotionDetectLoop() {
     const video = document.getElementById('emotion-video');
     const result = document.getElementById('emotion-result');
+    const canvas = document.getElementById('emotion-canvas');
+    const weights = document.getElementById('emotion-weights');
+    const ctx = canvas.getContext('2d');
     const tick = async () => {
       if (!video.srcObject) return;
       if (video.readyState === 4) {
         try {
           const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
           if (detection && detection.expressions) {
-            const top = Object.entries(detection.expressions).sort((a, b) => b[1] - a[1])[0];
-            result.textContent = top[0].toUpperCase() + ' — ' + Math.round(top[1] * 100) + '%';
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+            canvas.classList.add('active');
+            drawFaceBox(ctx, detection.detection.box, canvas.width, canvas.height);
+            const sorted = Object.entries(detection.expressions).sort((a, b) => b[1] - a[1]);
+            result.textContent = sorted[0][0].toUpperCase() + ' — ' + Math.round(sorted[0][1] * 100) + '%';
+            renderEmotionWeights(weights, sorted);
           } else {
+            canvas.classList.remove('active');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             result.textContent = 'No face detected';
+            weights.innerHTML = '';
           }
         } catch (e) { /* keep looping */ }
       }
