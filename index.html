@@ -320,6 +320,10 @@
   }
   .emotion-canvas.active { opacity: 1; }
   .lab-result { font-family: var(--font); font-size: 13px; letter-spacing: 0.4px; color: var(--on-primary-mute); min-height: 18px; }
+  .emotion-stats { display: flex; flex-wrap: wrap; gap: 14px 20px; }
+  .emotion-stat { display: flex; align-items: baseline; gap: 6px; }
+  .emotion-stat-label { font-family: var(--font); font-size: 9px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--on-primary-mute); opacity: 0.6; }
+  .emotion-stat-value { font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: 0.3px; color: var(--scan-green); font-variant-numeric: tabular-nums; }
   .emotion-weights { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; }
   .emotion-weight-row { display: grid; grid-template-columns: 78px 1fr 32px; align-items: center; gap: 8px; }
   .emotion-weight-label { font-family: var(--font); font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--on-primary-mute); opacity: 0.75; }
@@ -520,6 +524,7 @@
               <canvas class="emotion-canvas" id="emotion-canvas" aria-hidden="true"></canvas>
             </div>
             <div class="lab-result" id="emotion-result"></div>
+            <div class="emotion-stats" id="emotion-stats"></div>
             <div class="emotion-weights" id="emotion-weights"></div>
           </div>
         </div>
@@ -999,7 +1004,9 @@
       if (!faceApiLoaded) {
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
-          faceapi.nets.faceExpressionNet.loadFromUri(FACE_MODEL_URL)
+          faceapi.nets.faceExpressionNet.loadFromUri(FACE_MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODEL_URL),
+          faceapi.nets.ageGenderNet.loadFromUri(FACE_MODEL_URL)
         ]);
         faceApiLoaded = true;
       }
@@ -1027,6 +1034,7 @@
     const overlay = document.getElementById('emotion-scan-overlay');
     const canvas = document.getElementById('emotion-canvas');
     const weights = document.getElementById('emotion-weights');
+    const stats = document.getElementById('emotion-stats');
     if (video.srcObject) {
       video.srcObject.getTracks().forEach(track => track.stop());
       video.srcObject = null;
@@ -1039,6 +1047,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     result.textContent = '';
     weights.innerHTML = '';
+    stats.innerHTML = '';
     stage.classList.remove('open');
     document.getElementById('emotion-preview').classList.remove('launched');
     launchBtn.textContent = 'Launch';
@@ -1072,6 +1081,43 @@
     });
   }
 
+  // Draws a live 68-point landmark mesh (jaw, brows, nose, eyes, mouth) over the detected
+  // face — the eyes and mouth are closed loops, everything else an open tracking curve.
+  function drawFaceLandmarks(ctx, landmarks) {
+    const draw = (pts, closed) => {
+      if (!pts || !pts.length) return;
+      ctx.beginPath();
+      pts.forEach((p, i) => { i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); });
+      if (closed) ctx.closePath();
+      ctx.stroke();
+    };
+    ctx.strokeStyle = 'rgba(70, 255, 140, 0.5)';
+    ctx.lineWidth = Math.max(1, ctx.canvas.width * 0.0012);
+    draw(landmarks.getJawOutline(), false);
+    draw(landmarks.getLeftEyeBrow(), false);
+    draw(landmarks.getRightEyeBrow(), false);
+    draw(landmarks.getNose(), false);
+    draw(landmarks.getLeftEye(), true);
+    draw(landmarks.getRightEye(), true);
+    draw(landmarks.getMouth(), true);
+    ctx.fillStyle = '#46ff8c';
+    const r = Math.max(1.2, ctx.canvas.width * 0.0016);
+    landmarks.positions.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  // Renders the age/gender/confidence readout row. All figures are model estimates,
+  // labeled as such — not verified ground truth.
+  function renderEmotionStats(container, stats) {
+    container.innerHTML =
+      '<div class="emotion-stat"><span class="emotion-stat-label">Confidence</span><span class="emotion-stat-value">' + stats.confidence + '%</span></div>' +
+      '<div class="emotion-stat"><span class="emotion-stat-label">Age (est.)</span><span class="emotion-stat-value">~' + stats.age + '</span></div>' +
+      '<div class="emotion-stat"><span class="emotion-stat-label">Gender (est.)</span><span class="emotion-stat-value">' + stats.gender + ' · ' + stats.genderProbability + '%</span></div>';
+  }
+
   // Renders every expression face-api scored (not just the top one) as a weighted bar list.
   function renderEmotionWeights(container, sortedExpressions) {
     container.innerHTML = '';
@@ -1092,12 +1138,16 @@
     const result = document.getElementById('emotion-result');
     const canvas = document.getElementById('emotion-canvas');
     const weights = document.getElementById('emotion-weights');
+    const stats = document.getElementById('emotion-stats');
     const ctx = canvas.getContext('2d');
     const tick = async () => {
       if (!video.srcObject) return;
       if (video.readyState === 4) {
         try {
-          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceExpressions()
+            .withAgeAndGender();
           if (detection && detection.expressions) {
             if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
               canvas.width = video.videoWidth;
@@ -1105,13 +1155,21 @@
             }
             canvas.classList.add('active');
             drawFaceBox(ctx, detection.detection.box, canvas.width, canvas.height);
+            if (detection.landmarks) drawFaceLandmarks(ctx, detection.landmarks);
             const sorted = Object.entries(detection.expressions).sort((a, b) => b[1] - a[1]);
             result.textContent = sorted[0][0].toUpperCase() + ' — ' + Math.round(sorted[0][1] * 100) + '%';
+            renderEmotionStats(stats, {
+              confidence: Math.round(detection.detection.score * 100),
+              age: Math.round(detection.age),
+              gender: detection.gender.charAt(0).toUpperCase() + detection.gender.slice(1),
+              genderProbability: Math.round(detection.genderProbability * 100)
+            });
             renderEmotionWeights(weights, sorted);
           } else {
             canvas.classList.remove('active');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             result.textContent = 'No face detected';
+            stats.innerHTML = '';
             weights.innerHTML = '';
           }
         } catch (e) { /* keep looping */ }
