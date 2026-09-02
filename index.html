@@ -304,9 +304,53 @@
   .work-row-top .button-cap, .work-title, .work-row .body-md { position: relative; z-index: 2; text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
   .work-title { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
 
-  /* ---------- writing ---------- */
-  .writing-item { display: flex; flex-direction: column; gap: 10px; padding: 28px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--canvas-night-soft); }
-  .writing-title { font-size: 24px; font-weight: 700; letter-spacing: 0.3px; }
+  /* ---------- journal ---------- */
+  .journal-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--hairline); }
+  .journal-filters { display: flex; gap: 24px; flex-wrap: wrap; }
+  .journal-filter {
+    background: none; border: none; padding: 0; cursor: pointer;
+    text-transform: uppercase; font-size: 12px; font-weight: 600; letter-spacing: 0.96px;
+    color: var(--on-primary-mute); opacity: 0.55;
+  }
+  .journal-filter:hover { opacity: 0.85; }
+  .journal-filter.is-active { color: var(--on-primary); opacity: 1; }
+  .journal-search { position: relative; }
+  .journal-search input {
+    background: var(--canvas-night-soft-2); border: 1px solid var(--hairline); border-radius: 6px;
+    color: var(--on-primary); font-family: var(--font); font-size: 13px;
+    padding: 10px 14px 10px 34px; width: 200px; outline: none;
+  }
+  .journal-search input:focus { border-color: var(--hairline-soft); }
+  .journal-search input::placeholder { color: var(--on-primary-mute); opacity: 0.6; }
+  .journal-search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: 0.5; pointer-events: none; }
+
+  .journal-list { margin-top: 4px; }
+  .journal-row {
+    display: grid; grid-template-columns: 200px 1fr auto; align-items: center; gap: 20px;
+    padding: 20px 12px; border-bottom: 1px solid var(--hairline-soft);
+    cursor: pointer; background: transparent; border-radius: 6px;
+  }
+  .journal-row:hover { background: var(--canvas-night-soft-2); }
+  .journal-row-meta { font-size: 13px; color: var(--on-primary-mute); opacity: 0.65; white-space: nowrap; }
+  .journal-row-title { font-size: 16px; font-weight: 600; letter-spacing: 0.2px; }
+  .journal-row-time { font-size: 13px; color: var(--on-primary-mute); opacity: 0.55; text-align: right; white-space: nowrap; }
+  .journal-row[aria-expanded="true"] .journal-row-title { color: var(--on-primary); }
+  .journal-row[aria-expanded="true"] { background: var(--canvas-night-soft-2); }
+
+  .journal-detail {
+    grid-column: 1 / -1; max-height: 0; overflow: hidden;
+    transition: max-height 0.25s ease, padding 0.25s ease;
+  }
+  .journal-row[aria-expanded="true"] + .journal-detail { max-height: 260px; padding-top: 16px; }
+  .journal-detail p { max-width: 640px; }
+
+  .journal-empty { padding: 40px 12px; text-align: center; opacity: 0.5; display: none; }
+  .journal-empty.is-visible { display: block; }
+
+  @media (max-width: 700px) {
+    .journal-row { grid-template-columns: 1fr; gap: 6px; }
+    .journal-row-time { text-align: left; }
+  }
 
   /* ---------- creative ---------- */
   .creative-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--hairline-soft); flex-wrap: wrap; }
@@ -793,16 +837,75 @@
   <div class="band-inner">
     <div class="micro-cap">Journal &amp; Newsletter</div>
     <h2 class="display display-xl" style="margin-top: 8px;">Journal</h2>
+    <p class="body-md" style="margin-top: 12px;">Writing, milestones, and things I've shipped — in one running log.</p>
 
-    <div style="margin-top: 40px;">
-      <div class="writing-item">
-        <div class="micro-cap">25 May 2026 — 8 Min Read</div>
-        <div class="writing-title">The Case for Drinking Up</div>
-        <p class="body-md" style="max-width: 640px;">The most intelligent glass of red wine you can pour comes from 1,200 metres up the side of the Andes.</p>
-        <a href="#" class="button-cap plain" style="margin-top: 4px;">Read →</a>
+    <div class="journal-toolbar">
+      <div class="journal-filters" id="journal-filters">
+        <button class="journal-filter is-active" data-filter="all" type="button">All</button>
+        <button class="journal-filter" data-filter="writing" type="button">Writing</button>
+        <button class="journal-filter" data-filter="milestone" type="button">Milestones</button>
+        <button class="journal-filter" data-filter="project" type="button">Projects</button>
       </div>
-      <!-- Add the next entry as a sibling .writing-item once it's written — no placeholder slots -->
+      <div class="journal-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="journal-search-input" placeholder="Search" autocomplete="off">
+      </div>
     </div>
+
+    <div class="journal-list" id="journal-list">
+
+      <!-- DUMMY entries below — placeholder content to preview the layout. Swap or delete
+           before this goes live for real; each is clearly marked "Dummy" for that reason. -->
+      <div class="journal-row" data-category="milestone" role="button" tabindex="0" aria-expanded="false">
+        <div class="journal-row-meta">12 Aug 2026 · Milestone</div>
+        <div class="journal-row-title">Dummy: Completed a Certification</div>
+        <div class="journal-row-time">1 min read</div>
+      </div>
+      <div class="journal-detail">
+        <p class="body-md">Placeholder entry — replace with a real update, e.g. finishing a course or certification and what it means for the work ahead.</p>
+      </div>
+
+      <div class="journal-row" data-category="project" role="button" tabindex="0" aria-expanded="false">
+        <div class="journal-row-meta">3 Jul 2026 · Project</div>
+        <div class="journal-row-title">Dummy: Shipped a New Project</div>
+        <div class="journal-row-time">2 min read</div>
+      </div>
+      <div class="journal-detail">
+        <p class="body-md">Placeholder entry — replace with a real project update, what it does, and a link once it's live.</p>
+      </div>
+
+      <div class="journal-row" data-category="milestone" role="button" tabindex="0" aria-expanded="false">
+        <div class="journal-row-meta">20 Jun 2026 · Milestone</div>
+        <div class="journal-row-title">Dummy: Reached a Summit</div>
+        <div class="journal-row-time">3 min read</div>
+      </div>
+      <div class="journal-detail">
+        <p class="body-md">Placeholder entry — replace with a real milestone, e.g. a climb, a race, or another personal goal reached.</p>
+      </div>
+
+      <div class="journal-row" data-category="writing" role="button" tabindex="0" aria-expanded="false">
+        <div class="journal-row-meta">2 Jun 2026 · Writing</div>
+        <div class="journal-row-title">Dummy: Wrote a New Post</div>
+        <div class="journal-row-time">5 min read</div>
+      </div>
+      <div class="journal-detail">
+        <p class="body-md">Placeholder entry — replace with a real essay teaser and a link to the full post.</p>
+      </div>
+
+      <!-- Entry: category is one of writing / milestone / project — add new entries as a matching pair of
+           .journal-row + .journal-detail, most recent first. No placeholder slots. -->
+      <div class="journal-row" data-category="writing" role="button" tabindex="0" aria-expanded="false">
+        <div class="journal-row-meta">25 May 2026 · Writing</div>
+        <div class="journal-row-title">The Case for Drinking Up</div>
+        <div class="journal-row-time">8 min read</div>
+      </div>
+      <div class="journal-detail">
+        <p class="body-md">The most intelligent glass of red wine you can pour comes from 1,200 metres up the side of the Andes.</p>
+        <a href="#" class="button-cap plain" style="margin-top: 4px; display: inline-block;">Read full post →</a>
+      </div>
+
+    </div>
+    <div class="journal-empty" id="journal-empty">No entries match — try a different filter or search.</div>
   </div>
 </section>
 
@@ -1504,6 +1607,60 @@
       result.textContent = 'Could not reach the food scanner right now — check your connection and try again.';
     }
   }
+
+  // ---------- Journal: filter, search, expand-in-place ----------
+  (function initJournal() {
+    const list = document.getElementById('journal-list');
+    if (!list) return;
+    const rows = Array.from(list.querySelectorAll('.journal-row'));
+    const filterBtns = Array.from(document.querySelectorAll('.journal-filter'));
+    const searchInput = document.getElementById('journal-search-input');
+    const emptyState = document.getElementById('journal-empty');
+    let activeFilter = 'all';
+
+    function applyFilters() {
+      const query = (searchInput.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+      rows.forEach((row) => {
+        const category = row.getAttribute('data-category');
+        const title = row.querySelector('.journal-row-title').textContent.toLowerCase();
+        const detail = row.nextElementSibling;
+        const matchesFilter = activeFilter === 'all' || category === activeFilter;
+        const matchesQuery = !query || title.includes(query);
+        const visible = matchesFilter && matchesQuery;
+        row.style.display = visible ? '' : 'none';
+        if (detail) detail.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+      });
+      emptyState.classList.toggle('is-visible', visibleCount === 0);
+    }
+
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.getAttribute('data-filter');
+        filterBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
+        applyFilters();
+      });
+    });
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+
+    function toggleRow(row) {
+      const isOpen = row.getAttribute('aria-expanded') === 'true';
+      rows.forEach((r) => r.setAttribute('aria-expanded', 'false'));
+      row.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    }
+
+    rows.forEach((row) => {
+      row.addEventListener('click', () => toggleRow(row));
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleRow(row);
+        }
+      });
+    });
+  })();
 
 </script>
 
