@@ -355,7 +355,19 @@
   /* ---------- creative ---------- */
   .creative-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--hairline-soft); flex-wrap: wrap; }
   .creative-row:last-child { border-bottom: none; }
-  #gh-chart { border-radius: 4px; filter: grayscale(0.15); background: var(--canvas-night-soft); min-height: 100px; }
+  .gh-graph-scroll { width: 100%; max-width: 722px; overflow-x: auto; padding-bottom: 4px; }
+  .gh-graph-wrap { display: flex; flex-direction: column; gap: 6px; width: max-content; min-width: 100%; min-height: 112px; }
+  .gh-graph-months { display: grid; grid-auto-flow: column; grid-auto-columns: 11px; gap: 3px; margin-left: 26px; height: 12px; font-size: 10px; color: var(--on-primary-mute); opacity: 0.6; letter-spacing: 0.4px; }
+  .gh-graph-months span { white-space: nowrap; }
+  .gh-graph-body { display: flex; gap: 6px; }
+  .gh-graph-days { display: grid; grid-template-rows: repeat(7, 11px); gap: 3px; width: 20px; font-size: 10px; color: var(--on-primary-mute); opacity: 0.6; }
+  .gh-graph-days span { display: flex; align-items: center; height: 11px; line-height: 1; }
+  .gh-graph-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 11px); grid-auto-columns: 11px; gap: 3px; }
+  .gh-graph-cell { width: 11px; height: 11px; border-radius: 2px; background: #161616; }
+  .gh-graph-cell[data-level="1"] { background: #4d130f; }
+  .gh-graph-cell[data-level="2"] { background: #8a1f16; }
+  .gh-graph-cell[data-level="3"] { background: #c2281b; }
+  .gh-graph-cell[data-level="4"] { background: var(--live-red); }
   .gh-activity { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; max-width: 722px; }
   .gh-activity li {
     display: flex; justify-content: space-between; gap: 16px;
@@ -915,8 +927,12 @@
     <div style="margin-top: 40px;">
       <div class="creative-row" style="flex-direction: column; align-items: flex-start;">
         <div class="micro-cap">Code — Live from GitHub</div>
-        <!-- No key required: renders bfitzx's real contribution graph — ff3b30 is the site's red accent -->
-        <img id="gh-chart" src="https://ghchart.rshah.org/ff3b30/bfitzx" alt="Brian's GitHub contribution graph" width="722" height="112" loading="lazy">
+        <!-- Custom red/black contribution graph — built from /api/github-contributions, no external chart image -->
+        <div class="gh-graph-scroll">
+          <div class="gh-graph-wrap" id="gh-graph" role="img" aria-label="Brian's GitHub contribution graph">
+            <div class="micro-cap">Loading contribution graph…</div>
+          </div>
+        </div>
         <ul class="gh-activity" id="gh-activity">
           <li class="micro-cap">Loading recent activity…</li>
         </ul>
@@ -930,10 +946,6 @@
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-top">
-      <div>
-        <div class="micro-cap">Stay in the loop</div>
-        <div class="work-title" style="margin-top: 6px;">Writing, dispatches, and occasional thoughts.</div>
-      </div>
       <!-- Non-functional stub — wire to an email provider (Buttondown, ConvertKit, etc.) -->
       <form class="footer-form" onsubmit="event.preventDefault(); alert('Wire this form to your email provider.');">
         <input type="email" placeholder="you@email.com" required>
@@ -1601,6 +1613,93 @@
       result.textContent = 'Could not reach the food scanner right now — check your connection and try again.';
     }
   }
+
+  // ---------- GitHub: contribution graph (black -> red intensity), via /api/github-contributions ----------
+  (function loadGithubGraph() {
+    const wrap = document.getElementById('gh-graph');
+    if (!wrap) return;
+
+    const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+    const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    fetch('/api/github-contributions')
+      .then((res) => { if (!res.ok) throw new Error('bad response'); return res.json(); })
+      .then((data) => renderGraph(data.days || []))
+      .catch(() => {
+        wrap.innerHTML = '<div class="micro-cap">Contribution graph unavailable right now.</div>';
+      });
+
+    function renderGraph(days) {
+      if (!days.length) {
+        wrap.innerHTML = '<div class="micro-cap">No contribution data.</div>';
+        return;
+      }
+      const sorted = days.slice().sort((a, b) => a.date.localeCompare(b.date));
+      const first = new Date(sorted[0].date + 'T00:00:00');
+      const gridStart = new Date(first);
+      gridStart.setDate(gridStart.getDate() - gridStart.getDay()); // back up to that week's Sunday
+
+      const columns = new Map(); // colIndex -> array of { dow, level, date }
+      const monthChanges = [];
+      let lastMonth = null;
+      let total = 0;
+
+      sorted.forEach((d) => {
+        const date = new Date(d.date + 'T00:00:00');
+        const dow = date.getDay();
+        const col = Math.round((date - gridStart) / (7 * 86400000));
+        if (!columns.has(col)) columns.set(col, []);
+        columns.get(col).push({ dow, level: d.level, date: d.date });
+        if (date.getMonth() !== lastMonth) {
+          monthChanges.push({ col, label: MONTH_LABELS[date.getMonth()] });
+          lastMonth = date.getMonth();
+        }
+        if (d.level > 0) total++;
+      });
+
+      const colCount = Math.max.apply(null, Array.from(columns.keys())) + 1;
+
+      const monthsEl = document.createElement('div');
+      monthsEl.className = 'gh-graph-months';
+      for (let i = 0; i < colCount; i++) {
+        const found = monthChanges.find((mc) => mc.col === i);
+        const cell = document.createElement('span');
+        cell.textContent = found ? found.label : '';
+        monthsEl.appendChild(cell);
+      }
+
+      const daysEl = document.createElement('div');
+      daysEl.className = 'gh-graph-days';
+      DAY_LABELS.forEach((label) => {
+        const s = document.createElement('span');
+        s.textContent = label;
+        daysEl.appendChild(s);
+      });
+
+      const gridEl = document.createElement('div');
+      gridEl.className = 'gh-graph-grid';
+      for (let col = 0; col < colCount; col++) {
+        for (let row = 0; row < 7; row++) {
+          const found = (columns.get(col) || []).find((cellData) => cellData.dow === row);
+          const cell = document.createElement('div');
+          cell.className = 'gh-graph-cell';
+          cell.setAttribute('data-level', found ? found.level : '0');
+          if (found) cell.title = found.date + ' — level ' + found.level;
+          gridEl.appendChild(cell);
+        }
+      }
+
+      const bodyEl = document.createElement('div');
+      bodyEl.className = 'gh-graph-body';
+      bodyEl.appendChild(daysEl);
+      bodyEl.appendChild(gridEl);
+
+      wrap.innerHTML = '';
+      wrap.appendChild(monthsEl);
+      wrap.appendChild(bodyEl);
+      wrap.setAttribute('aria-label', "Brian's GitHub contribution graph — " + total + ' active days in the last year');
+    }
+  })();
 
   // ---------- GitHub: last 3 public events, live from the API ----------
   (function loadGithubActivity() {
