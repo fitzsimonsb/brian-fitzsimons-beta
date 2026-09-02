@@ -304,6 +304,22 @@
   .work-row-top .button-cap, .work-title, .work-row .body-md { position: relative; z-index: 2; text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
   .work-title { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
 
+  /* ---------- roadmap ---------- */
+  .roadmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-top: 32px; }
+  @media (max-width: 900px) { .roadmap-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .roadmap-grid { grid-template-columns: 1fr; } }
+  .roadmap-card { background: var(--canvas-night-soft); min-height: 128px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; transition: background 0.15s ease; }
+  .roadmap-card:hover { background: var(--canvas-night-soft-2); }
+  .roadmap-wordmark { color: var(--on-primary); opacity: 0.82; text-align: center; line-height: 1; }
+  .roadmap-card:hover .roadmap-wordmark { opacity: 1; }
+  .roadmap-sublabel { font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--on-primary-mute); opacity: 0.5; }
+  .rm-serif { font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; letter-spacing: 0.5px; }
+  .rm-mono { font-family: 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 18px; font-weight: 600; text-transform: lowercase; }
+  .rm-wide { text-transform: uppercase; letter-spacing: 3px; font-weight: 800; font-size: 18px; }
+  .rm-lower { text-transform: lowercase; font-weight: 700; font-size: 22px; letter-spacing: 0.2px; }
+  .rm-bold { font-weight: 800; font-size: 22px; letter-spacing: 0.3px; }
+  .rm-badge { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border: 2px solid var(--on-primary); border-radius: 50%; font-weight: 800; font-size: 18px; opacity: 0.82; }
+
   /* ---------- journal ---------- */
   .journal-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--hairline); }
   .journal-filters { display: flex; gap: 24px; flex-wrap: wrap; }
@@ -562,6 +578,7 @@
   </button>
   <ul class="nav-links" id="nav-links">
     <li><a href="#work">Work</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#lab">Lab</a></li>
     <li><a href="#writing">Journal</a></li>
     <li><a href="#creative">Make</a></li>
@@ -647,6 +664,50 @@
         <p class="body-md" style="max-width: 640px;">Computer Vision AI for Consumer Tech, Security &amp; Government.</p>
       </div>
       <!-- Add the next project as a sibling .work-row -->
+    </div>
+  </div>
+</section>
+
+<section class="band" id="roadmap">
+  <div class="band-inner">
+    <div class="micro-cap">Career Trail</div>
+    <h2 class="display display-xl" style="margin-top: 8px;">Roadmap</h2>
+    <p class="body-md" style="margin-top: 12px;">Product and engineering across health data, telecom, and travel tech.</p>
+
+    <!-- Wordmarks, not raster logos — built in CSS so every entry stays crisp, monochrome,
+         and on-brand without depending on an external asset or a trademarked file. Add a
+         new .roadmap-card as a sibling to extend the trail. -->
+    <div class="roadmap-grid">
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-bold">Datavant</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-lower">optum</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-lower">vodafone</div>
+        <div class="roadmap-sublabel">Group</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-wide">Xperi</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-lower">vodafone</div>
+        <div class="roadmap-sublabel">UK</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-badge">BT</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-mono">openjaw</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-bold">O2</div>
+        <div class="roadmap-sublabel">Telef&oacute;nica</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-wordmark rm-wide">ESAT</div>
+      </div>
     </div>
   </div>
 </section>
