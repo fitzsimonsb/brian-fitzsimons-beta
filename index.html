@@ -39,7 +39,7 @@
   },
   "knowsAbout": ["Product Management", "Product Management Ireland", "Product Management Galway", "Irish Leadership", "Health Data", "Voice AI", "Interoperability"],
   "sameAs": [
-    "https://github.com/fitzsimonsb"
+    "https://github.com/bfitzx"
   ]
 }
 </script>
@@ -356,6 +356,15 @@
   .creative-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--hairline-soft); flex-wrap: wrap; }
   .creative-row:last-child { border-bottom: none; }
   #gh-chart { border-radius: 4px; filter: grayscale(0.15); background: var(--canvas-night-soft); min-height: 100px; }
+  .gh-activity { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; max-width: 722px; }
+  .gh-activity li {
+    display: flex; justify-content: space-between; gap: 16px;
+    padding: 10px 0; border-bottom: 1px solid var(--hairline-soft);
+    font-size: 14px; color: var(--on-primary-mute);
+  }
+  .gh-activity li:last-child { border-bottom: none; }
+  .gh-activity .gh-activity-what { color: var(--on-primary); }
+  .gh-activity .gh-activity-when { opacity: 0.6; white-space: nowrap; flex: none; }
 
   /* ---------- lab ---------- */
   .lab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--hairline); border: 1px solid var(--hairline); margin-top: 32px; }
@@ -904,17 +913,14 @@
     <h2 class="display display-xl" style="margin-top: 8px;">Make</h2>
 
     <div style="margin-top: 40px;">
-      <div class="creative-row">
-        <div>
-          <div class="micro-cap">Mixtape</div>
-          <div class="work-title">Yoga &amp; Code</div>
-        </div>
-      </div>
       <div class="creative-row" style="flex-direction: column; align-items: flex-start;">
         <div class="micro-cap">Code — Live from GitHub</div>
-        <!-- No key required: renders fitzsimonsb's real contribution graph -->
-        <img id="gh-chart" src="https://ghchart.rshah.org/ff3b30/fitzsimonsb" alt="Brian's GitHub contribution graph" width="722" height="112" loading="lazy">
-        <a href="https://github.com/fitzsimonsb" class="button-cap plain" target="_blank" rel="noopener">View GitHub →</a>
+        <!-- No key required: renders bfitzx's real contribution graph — ff3b30 is the site's red accent -->
+        <img id="gh-chart" src="https://ghchart.rshah.org/ff3b30/bfitzx" alt="Brian's GitHub contribution graph" width="722" height="112" loading="lazy">
+        <ul class="gh-activity" id="gh-activity">
+          <li class="micro-cap">Loading recent activity…</li>
+        </ul>
+        <a href="https://github.com/bfitzx" class="button-cap plain" target="_blank" rel="noopener">View GitHub →</a>
       </div>
       <!-- Add a visual-art entry here once there's a real project to show -->
     </div>
@@ -935,7 +941,7 @@
       </form>
     </div>
     <ul class="footer-social">
-      <li><a href="https://github.com/fitzsimonsb" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a href="https://github.com/bfitzx" target="_blank" rel="noopener">GitHub</a></li>
       <li><a href="#" target="_blank" rel="noopener">LinkedIn</a></li>
       <li><a href="#" target="_blank" rel="noopener">X</a></li>
       <li><a href="https://soundcloud.com/yogaandcode" target="_blank" rel="noopener">SoundCloud</a></li>
@@ -1595,6 +1601,70 @@
       result.textContent = 'Could not reach the food scanner right now — check your connection and try again.';
     }
   }
+
+  // ---------- GitHub: last 3 public events, live from the API ----------
+  (function loadGithubActivity() {
+    const list = document.getElementById('gh-activity');
+    if (!list) return;
+    const GH_USER = 'bfitzx';
+
+    function timeAgo(iso) {
+      const diffMs = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 60) return mins <= 1 ? '1m ago' : mins + 'm ago';
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return hours + 'h ago';
+      const days = Math.floor(hours / 24);
+      if (days < 30) return days + 'd ago';
+      return new Date(iso).toLocaleDateString('en-IE', { month: 'short', year: 'numeric' });
+    }
+
+    function describe(event) {
+      const repo = (event.repo && event.repo.name || '').split('/').pop() || 'a repo';
+      const payload = event.payload || {};
+      switch (event.type) {
+        case 'PushEvent': {
+          const n = (payload.commits || []).length || 1;
+          return 'Pushed ' + n + ' commit' + (n === 1 ? '' : 's') + ' to ' + repo;
+        }
+        case 'CreateEvent':
+          return 'Created ' + (payload.ref_type || 'repo') + ' in ' + repo;
+        case 'WatchEvent':
+          return 'Starred ' + repo;
+        case 'ForkEvent':
+          return 'Forked ' + repo;
+        case 'PullRequestEvent':
+          return (payload.action || 'Updated') + ' a pull request in ' + repo;
+        case 'IssuesEvent':
+          return (payload.action || 'Updated') + ' an issue in ' + repo;
+        case 'IssueCommentEvent':
+          return 'Commented on an issue in ' + repo;
+        case 'ReleaseEvent':
+          return 'Published a release in ' + repo;
+        case 'PublicEvent':
+          return 'Made ' + repo + ' public';
+        default:
+          return event.type.replace('Event', '') + ' — ' + repo;
+      }
+    }
+
+    fetch('https://api.github.com/users/' + GH_USER + '/events/public')
+      .then((res) => { if (!res.ok) throw new Error('GitHub API error ' + res.status); return res.json(); })
+      .then((events) => {
+        const recent = (events || []).slice(0, 3);
+        if (!recent.length) {
+          list.innerHTML = '<li class="micro-cap">No recent public activity.</li>';
+          return;
+        }
+        list.innerHTML = recent.map((event) =>
+          '<li><span class="gh-activity-what">' + describe(event) + '</span>' +
+          '<span class="gh-activity-when">' + timeAgo(event.created_at) + '</span></li>'
+        ).join('');
+      })
+      .catch(() => {
+        list.innerHTML = '<li class="micro-cap">Recent activity unavailable right now.</li>';
+      });
+  })();
 
   // ---------- Journal: filter, search, expand-in-place ----------
   (function initJournal() {
